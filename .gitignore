@@ -5,9 +5,10 @@ __pycache__/
 *.py[cod]
 
 logs/
+logs/
 *.log
-
 .env
+.env.*
 
 data/raw/
 data/interim/
@@ -15,9 +16,22 @@ data/processed/
 
 artifacts/models/
 artifacts/preprocessing/
+*.pkl
+*.joblib
+
+mlflow.db
+mlflow.db-shm
+mlflow.db-wal
+mlruns/
+mlartifacts/
+
 
 mlruns/
+mlartifacts/
 
 .ipynb_checkpoints/
 
 .vscode/
+
+.DS_Store
+Thumbs.db
