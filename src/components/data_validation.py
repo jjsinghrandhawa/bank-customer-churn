@@ -1,6 +1,7 @@
 import sys
 import pandas as pd
-
+import warnings
+warnings.filterwarnings("ignore")
 from src.logger import logger
 from src.exception import BankChurnException
 

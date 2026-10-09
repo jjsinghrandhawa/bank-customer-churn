@@ -1,4 +1,7 @@
 import os
+import warnings
+warnings.filterwarnings("ignore")
+from dotenv import load_dotenv
 import sys
 import json
 import joblib
@@ -55,12 +58,41 @@ MLFLOW_EXPERIMENT_NAME = (
 # MLflow Configuration
 # ============================================================
 
+
 def setup_mlflow():
 
     try:
+        # Load local credentials from .env
+        load_dotenv()
 
+        dagshub_username = os.getenv("DAGSHUB_USERNAME")
+        dagshub_token = os.getenv("DAGSHUB_TOKEN")
+
+        if not dagshub_username or not dagshub_token:
+            raise ValueError(
+                "DAGSHUB_USERNAME or DAGSHUB_TOKEN "
+                "is missing from .env"
+            )
+
+        # Configure remote MLflow authentication
+        os.environ["MLFLOW_TRACKING_USERNAME"] = dagshub_username
+        os.environ["MLFLOW_TRACKING_PASSWORD"] = dagshub_token
+
+        # Configure the DagsHub tracking server
+        tracking_uri = (
+            "https://dagshub.com/"
+            "jaskaranjit007/bank-customer-churn.mlflow"
+        )
+
+        mlflow.set_tracking_uri(tracking_uri)
+
+        # Select the experiment on DagsHub
         mlflow.set_experiment(
             MLFLOW_EXPERIMENT_NAME
+        )
+
+        logger.info(
+            f"Remote MLflow tracking configured: {tracking_uri}"
         )
 
         logger.info(
@@ -69,16 +101,12 @@ def setup_mlflow():
         )
 
     except Exception as error:
-
-        logger.error(
-            "Failed to configure MLflow."
-        )
+        logger.error("Failed to configure MLflow.")
 
         raise BankChurnException(
             error,
             sys
         )
-
 
 # ============================================================
 # Create Model Pipelines
@@ -481,6 +509,7 @@ def train_models(
             with mlflow.start_run(
                 run_name=model_name
             ):
+                run_id = mlflow.active_run().info.run_id
 
                 # ------------------------------------------------
                 # Log model name
@@ -616,7 +645,7 @@ def train_models(
                 # Log model
                 # ------------------------------------------------
 
-                mlflow.sklearn.log_model(
+                model_info=mlflow.sklearn.log_model(
                     sk_model=best_model,
                     name="model",
                     serialization_format="cloudpickle")
@@ -636,7 +665,13 @@ def train_models(
                         cv_roc_auc,
 
                     "test_metrics":
-                        metrics
+                        metrics,
+                    
+                    "run_id": 
+                        run_id,
+
+                    "model_uri": 
+                        model_info.model_uri
                 }
 
                 best_models[
@@ -820,3 +855,31 @@ def save_best_model(
             error,
             sys
         )
+
+
+def register_best_model(
+    model_uri,
+    registered_model_name="BankCustomerChurn"
+):
+    try:
+        setup_mlflow()
+
+        
+
+        registered_model = mlflow.register_model(
+            model_uri=model_uri,
+            name=registered_model_name
+        )
+
+        logger.info(
+            f"Registered model: {registered_model_name}, "
+            f"version: {registered_model.version}, "
+            f"source run: {model_uri}"
+        )
+
+        return registered_model
+
+    except Exception as error:
+        logger.error("Failed to register the best model.")
+
+        raise BankChurnException(error, sys)

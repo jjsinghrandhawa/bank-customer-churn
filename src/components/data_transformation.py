@@ -2,7 +2,8 @@ import os
 import sys
 import joblib
 import pandas as pd
-
+import warnings
+warnings.filterwarnings("ignore")
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.model_selection import train_test_split

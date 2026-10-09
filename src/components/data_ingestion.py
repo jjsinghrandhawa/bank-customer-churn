@@ -3,7 +3,8 @@ import pandas as pd
 import os
 from src.logger import logger
 from src.exception import BankChurnException
-
+import warnings
+warnings.filterwarnings("ignore")
 
 def load_local_data(file_path: str) -> pd.DataFrame:
     

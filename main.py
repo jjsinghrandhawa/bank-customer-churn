@@ -1,4 +1,6 @@
 import sys
+import warnings
+warnings.filterwarnings("ignore")
 
 from src.logger import logger
 from src.exception import BankChurnException
@@ -25,6 +27,8 @@ from src.components.model_training import (
     save_best_model
 )
 
+from src.components.model_training import register_best_model
+from src.components.model_evaluation import generate_evaluation_report
 
 # ============================================================
 # Configuration
@@ -336,6 +340,12 @@ if __name__ == "__main__":
 
             y_test=y_test
         )
+        generate_evaluation_report(
+            results=results,
+            best_models=best_models,
+            X_test=X_test,
+            y_test=y_test,
+)
 
         # ====================================================
         # STEP 5: MODEL COMPARISON
@@ -432,6 +442,17 @@ if __name__ == "__main__":
         ) = select_best_model(
             results,
             best_models
+        )
+        best_model_uri = results[best_model_name]["model_uri"]
+
+        registered_model = register_best_model(
+             model_uri=best_model_uri,
+            registered_model_name="BankCustomerChurn",
+        )
+
+        print(
+            f"Registered model: BankCustomerChurn "
+            f"(version {registered_model.version})"
         )
 
         print(
